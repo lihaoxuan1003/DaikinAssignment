@@ -14,6 +14,8 @@ using namespace std;
 
 Room::Room(float temperature, float minTemperature, float maxTemperature) {
     setTemperature(temperature);
+    if (minTemperature > maxTemperature)
+        throw invalid_argument("The minimum temperature cannot be higher than the maximum temperature.");
     setMinTemperature(minTemperature);
     setMaxTemperature(maxTemperature);
 }

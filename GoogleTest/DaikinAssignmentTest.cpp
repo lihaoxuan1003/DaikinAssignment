@@ -61,6 +61,7 @@ TEST_F(DaikinAssignmentTest, TestSetMaxTemperature) {
 }
 
 TEST_F(DaikinAssignmentTest, TestTemperaturesInvalid) {
+    EXPECT_THROW(new Room(TEMPERATURE, TEMPERATURE + 5, TEMPERATURE - 5), invalid_argument);
     EXPECT_THROW(officeRoom->setTemperature(MIN_ROOM_TEMPERATURE - 1), invalid_argument);
     EXPECT_THROW(officeRoom->setTemperature(MAX_ROOM_TEMPERATURE + 1), invalid_argument);
     EXPECT_THROW(officeRoom->setMinTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE - 1), invalid_argument);
