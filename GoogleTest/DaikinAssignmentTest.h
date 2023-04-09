@@ -14,9 +14,8 @@ class DaikinAssignmentTest : public ::testing::Test {
 
 protected:
     void SetUp() override;
-    void TearDown() override;
 
-    Room* officeRoom;
+    unique_ptr<Room> officeRoom;
 };
 
 #endif //DAIKINASSIGNMENT_DAIKINASSIGNMENTTEST_H
