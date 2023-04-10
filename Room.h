@@ -6,6 +6,9 @@
 #define DAIKINASSIGNMENT_ROOM_H
 
 #include <string>
+#include <memory>
+#include "Heater.h"
+#include "Cooler.h"
 
 using namespace std;
 
@@ -18,7 +21,7 @@ constexpr float MAX_VALID_ADJUSTABLE_TEMPERATURE = 30;
 
 class Room {
 public:
-    Room(float temperature, float minTemperature, float maxTemperature);
+    Room(float temperature, float minTemperature, float maxTemperature, Heater* heater, Cooler* cooler);
 
     virtual ~Room() = default;
 
@@ -37,9 +40,9 @@ private:
     float minTemperature;
     float maxTemperature;
     bool temperatureRegulationEnabled = false;
+    unique_ptr<Heater> heater;
+    unique_ptr<Cooler> cooler;
     void regulateTemperature();
-    void heat();
-    void cool();
 
     void isAdjustableTemperatureValid(float temperature);
     void roundTemperature(float &temperature);

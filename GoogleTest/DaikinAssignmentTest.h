@@ -7,6 +7,8 @@
 
 #include <gtest/gtest.h>
 #include "../Room.h"
+#include "../Radiator.h"
+#include "../AirConditioner.h"
 
 using namespace std;
 

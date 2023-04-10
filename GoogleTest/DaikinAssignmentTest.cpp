@@ -9,7 +9,7 @@
 #define MAX_TEMPERATURE 25
 
 void DaikinAssignmentTest::SetUp() {
-    officeRoom = make_unique<Room>(TEMPERATURE, MIN_TEMPERATURE, MAX_TEMPERATURE);
+    officeRoom = make_unique<Room>(TEMPERATURE, MIN_TEMPERATURE, MAX_TEMPERATURE, new Radiator(RadiatorValveSettings::SettingFive), new AirConditioner(AirConditionerPowerSettings::Low));
 }
 
 TEST_F(DaikinAssignmentTest, TestHeating) {
@@ -56,7 +56,7 @@ TEST_F(DaikinAssignmentTest, TestSetMaxTemperature) {
 }
 
 TEST_F(DaikinAssignmentTest, TestTemperaturesInvalid) {
-    EXPECT_THROW(make_unique<Room>(TEMPERATURE, TEMPERATURE + 5, TEMPERATURE - 5), invalid_argument);
+    EXPECT_THROW(make_unique<Room>(TEMPERATURE, TEMPERATURE + 5, TEMPERATURE - 5, new Radiator(RadiatorValveSettings::SettingFive), new AirConditioner(AirConditionerPowerSettings::Low)), invalid_argument);
     EXPECT_THROW(officeRoom->setTemperature(MIN_ROOM_TEMPERATURE - 1), invalid_argument);
     EXPECT_THROW(officeRoom->setTemperature(MAX_ROOM_TEMPERATURE + 1), invalid_argument);
     EXPECT_THROW(officeRoom->setMinTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE - 1), invalid_argument);

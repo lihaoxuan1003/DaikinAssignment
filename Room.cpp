@@ -6,18 +6,18 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-
 #include "Room.h"
 
 using namespace std;
 
-
-Room::Room(float temperature, float minTemperature, float maxTemperature) {
+Room::Room(float temperature, float minTemperature, float maxTemperature, Heater* heater, Cooler* cooler) {
     setTemperature(temperature);
     if (minTemperature > maxTemperature)
         throw invalid_argument("The minimum temperature cannot be higher than the maximum temperature.");
     setMinTemperature(minTemperature);
     setMaxTemperature(maxTemperature);
+    this->heater = unique_ptr<Heater>(heater);
+    this->cooler = unique_ptr<Cooler>(cooler);
 }
 
 void Room::temperatureRegulationOn() {
@@ -36,25 +36,17 @@ void Room::regulateTemperature() {
     if (temperature < minTemperature)
         cout << "Turn heating on..." << endl;
     while (minTemperature - temperature >= 0.01) {
-        heat();
+        heater->heat(temperature);
     }
 
     if (temperature > maxTemperature)
         cout << "Turn cooling on..." << endl;
     while (temperature - maxTemperature >= 0.01) {
-        cool();
+        cooler->cool(temperature);
     }
 
     roundTemperature(temperature);
     cout << "Temperature regulated current room temperature is: " << temperatureToString(temperature) << endl;
-}
-
-void Room::heat() {
-    temperature += 0.1;
-}
-
-void Room::cool() {
-    temperature -= 0.1;
 }
 
 float Room::getTemperature() const {
@@ -99,14 +91,14 @@ void Room::setMaxTemperature(float maxTemperature) {
     this->maxTemperature = maxTemperature;
     regulateTemperature();
 }
-
 void Room::isAdjustableTemperatureValid(float temperature) {
     if (temperature < MIN_VALID_ADJUSTABLE_TEMPERATURE || temperature > MAX_VALID_ADJUSTABLE_TEMPERATURE)
-        throw invalid_argument("The allowed set temperature is between " +
-                               temperatureToString(MIN_VALID_ADJUSTABLE_TEMPERATURE) + " and " +
-                               temperatureToString(MAX_VALID_ADJUSTABLE_TEMPERATURE) +
-                               " degrees.");
+    throw invalid_argument("The allowed set temperature is between " +
+    temperatureToString(MIN_VALID_ADJUSTABLE_TEMPERATURE) + " and " +
+    temperatureToString(MAX_VALID_ADJUSTABLE_TEMPERATURE) +
+    " degrees.");
 }
+
 
 void Room::roundTemperature(float &temperature) {
     temperature = static_cast<float>(round(temperature * 10)) / 10;
@@ -116,5 +108,6 @@ string Room::temperatureToString(float temperature) {
     string temperatureString = to_string(temperature);
     return temperatureString.substr(0, temperatureString.find('.') + 2);
 }
+
 
 
