@@ -16,6 +16,7 @@ enum class AirConditionerPowerSettings {
     NumberOfSettings
 };
 
+// the increments of current temperature in 10 mins
 constexpr array<float, static_cast<size_t>(AirConditionerPowerSettings::NumberOfSettings)> temperatureIncrements = {
         0.1,
         0.2,
@@ -23,11 +24,12 @@ constexpr array<float, static_cast<size_t>(AirConditionerPowerSettings::NumberOf
         0.4
 };
 
+// the decrements of current temperature in 10 mins
 constexpr array<float, static_cast<size_t>(AirConditionerPowerSettings::NumberOfSettings)> temperatureDecrements = {
         -0.1,
         -0.2,
-        -0.4,
-        -0.8
+        -0.3,
+        -0.4
 };
 
 #endif //DAIKINASSIGNMENT_AIRCONDITIONERENUM_H

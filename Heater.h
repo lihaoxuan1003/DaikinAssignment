@@ -8,7 +8,8 @@
 class Heater {
 public:
     virtual ~Heater() = default;
-    virtual void heat(float &temperature) = 0;
+    virtual void heat(float& temperature) = 0;
+    virtual void update(float& currentTemperature, float minTemperature, float maxTemperature) = 0;
 };
 
 

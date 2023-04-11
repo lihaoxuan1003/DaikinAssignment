@@ -8,7 +8,7 @@
 #include "Heater.h"
 #include "RadiatorEnum.h"
 
-#define RADIATOR_TEMPERATURE_INCREMENT 0.1
+#define RADIATOR_TEMPERATURE_INCREMENT 0.5 // the increment of the temperature in 10 mins
 
 class Radiator : public Heater {
 public:
@@ -17,10 +17,10 @@ public:
 
     ~Radiator() override = default;;
 
-    void heat(float &temperature) override;
+    void heat(float& temperature) override;
+    void update(float& currentTemperature, float minTemperature, float maxTemperature) override;
 
     RadiatorValveSettings getValveSetting() const;
-
     void setValveSetting(RadiatorValveSettings valveSetting);
 
 private:

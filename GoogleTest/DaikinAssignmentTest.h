@@ -18,6 +18,9 @@ protected:
     void SetUp() override;
 
     unique_ptr<Room> officeRoom;
+    shared_ptr<Radiator> radiator;
+    shared_ptr<AirConditioner> airConditioner;
+
 };
 
 #endif //DAIKINASSIGNMENT_DAIKINASSIGNMENTTEST_H

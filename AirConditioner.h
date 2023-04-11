@@ -16,8 +16,13 @@ public:
 
     ~AirConditioner() override = default;
 
-    void cool(float &temperature) override;
-    void heat(float &temperature) override;
+    void update(float& currentTemperature, float minTemperature, float maxTemperature) override;
+
+    void cool(float& temperature) override;
+    void heat(float& temperature) override;
+
+    AirConditionerPowerSettings getPowerSetting() const;
+    void setPowerSetting(AirConditionerPowerSettings powerSetting);
 
 private:
     AirConditionerPowerSettings powerSetting;

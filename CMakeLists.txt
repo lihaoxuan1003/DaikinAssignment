@@ -8,8 +8,7 @@ set(SRC_FILES
         main.cpp
         Room.cpp
         Radiator.cpp
-        AirConditioner.cpp
-        )
+        AirConditioner.cpp)
 
 set(HEADER_FILES
         Room.h
@@ -21,12 +20,11 @@ set(HEADER_FILES
         AirConditionerEnum.h)
 
 set(TEST_FILES
-        GoogleTest/DaikinAssignmentTest.cpp
-        )
+        GoogleTest/DaikinAssignmentTest.cpp ThermalExchangeEnum.h)
 
 add_library(DaikinAssignmentLib STATIC ${SRC_FILES} ${HEADER_FILES})
 
-target_include_directories(DaikinAssignmentLib PUBLIC /Users/HLi/googletest/googletest/include)
+target_include_directories(DaikinAssignmentLib PUBLIC C:/Users/haoxuan.li/googletest-1.13.0/googletest/include)
 
 add_subdirectory(GoogleTest)
 
