@@ -28,15 +28,15 @@ enum class ThermalExchange {
 
 // the decrements of current temperature in 10 mins
 constexpr array<float, static_cast<size_t>(ThermalExchange::NumberOfThermalExchangeLevels)> thermalExchangeValues = {
-        -0.5,
-        -0.3,
+        -0.8,
+        -0.4,
         -0.2,
         -0.1,
         0.0,
         0.1,
         0.2,
-        0.3,
-        0.5
+        0.4,
+        0.8
 };
 
 #endif //DAIKINASSIGNMENT_THERMALEXCHANGEENUM_H

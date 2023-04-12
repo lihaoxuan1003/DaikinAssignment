@@ -142,6 +142,7 @@ void Room::notifyCoolers(float& currentTemperature, float minTemperature, float 
 
 void Room::applyThermalExchange() {
     currentTemperature += thermalExchangeValues[static_cast<size_t>(thermalExchange)];
+    roundTemperature(currentTemperature);
 }
 
 void Room::setThermalExchange(ThermalExchange thermalExchange) {
