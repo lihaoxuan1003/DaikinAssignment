@@ -4,7 +4,7 @@
 #include "Room.h"
 
 #include <gtest/gtest.h>
-#include "GoogleTest/DaikinAssignmentTest.h"
+
 using namespace std;
 
 

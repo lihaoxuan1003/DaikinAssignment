@@ -17,16 +17,17 @@ set(HEADER_FILES
         Radiator.h
         AirConditioner.h
         RadiatorEnum.h
-        AirConditionerEnum.h)
+        AirConditionerEnum.h
+        ThermalExchangeEnum.h)
 
 set(TEST_FILES
-        GoogleTest/DaikinAssignmentTest.cpp ThermalExchangeEnum.h)
+        DaikinAssignmentTest/DaikinAssignmentTest.cpp )
 
 add_library(DaikinAssignmentLib STATIC ${SRC_FILES} ${HEADER_FILES})
 
-target_include_directories(DaikinAssignmentLib PUBLIC C:/Users/haoxuan.li/googletest-1.13.0/googletest/include)
+target_include_directories(DaikinAssignmentLib PUBLIC googletest/googletest/include)
 
-add_subdirectory(GoogleTest)
+add_subdirectory(DaikinAssignmentTest)
 
 add_executable(DaikinAssignment ${SRC_FILES} ${HEADER_FILES} ${TEST_FILES})
 
