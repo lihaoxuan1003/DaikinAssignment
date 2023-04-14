@@ -9,6 +9,7 @@
 #include "../Room.h"
 #include "../Radiator.h"
 #include "../AirConditioner.h"
+#include "../TemperatureRegulator.h"
 
 using namespace std;
 
@@ -18,7 +19,8 @@ protected:
     void SetUp() override;
     float roundTemperature(float temperature);
 
-    unique_ptr<Room> officeRoom;
+    unique_ptr<TemperatureRegulator> temperatureRegulator;
+    shared_ptr<Room> officeRoom;
     shared_ptr<Radiator> radiator;
     shared_ptr<AirConditioner> airConditioner;
 };

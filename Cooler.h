@@ -9,7 +9,6 @@ class Cooler {
 public:
     virtual ~Cooler() = default;
     virtual void cool(float& temperature) = 0;
-    virtual void update(float& currentTemperature, float minTemperature, float maxTemperature) = 0;
 };
 
 #endif //DAIKINASSIGNMENT_COOLER_H

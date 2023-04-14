@@ -18,7 +18,6 @@ public:
     ~Radiator() override = default;;
 
     void heat(float& temperature) override;
-    void update(float& currentTemperature, float minTemperature, float maxTemperature) override;
 
     RadiatorValveSettings getValveSetting() const;
     void setValveSetting(RadiatorValveSettings valveSetting);

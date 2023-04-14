@@ -4,6 +4,7 @@
 
 #include "Radiator.h"
 #include <iostream>
+
 void Radiator::heat(float& temperature) {
     if (temperature < radiatorValveTemperatures[static_cast<size_t>(valveSetting)])
         temperature += RADIATOR_TEMPERATURE_INCREMENT;
@@ -17,9 +18,4 @@ RadiatorValveSettings Radiator::getValveSetting() const {
 
 void Radiator::setValveSetting(RadiatorValveSettings valveSetting) {
     this->valveSetting = valveSetting;
-}
-
-void Radiator::update(float &currentTemperature, float minTemperature, float maxTemperature) {
-    if(currentTemperature < minTemperature)
-        heat(currentTemperature);
 }

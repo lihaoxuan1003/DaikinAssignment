@@ -4,23 +4,14 @@
 
 #include "AirConditioner.h"
 
+AirConditioner::AirConditioner(AirConditionerPowerSettings powerSetting) : powerSetting(powerSetting) {}
+
 void AirConditioner::heat(float& temperature) {
     temperature += temperatureIncrements[static_cast<size_t>(powerSetting)];
 }
 
 void AirConditioner::cool(float& temperature) {
     temperature += temperatureDecrements[static_cast<size_t>(powerSetting)];
-}
-
-AirConditioner::AirConditioner(AirConditionerPowerSettings powerSetting) : powerSetting(powerSetting) {}
-
-void
-AirConditioner::update(float& currentTemperature, float minTemperature, float maxTemperature) {
-    if(currentTemperature < minTemperature)
-        heat(currentTemperature);
-
-    if (currentTemperature > maxTemperature)
-        cool(currentTemperature);
 }
 
 AirConditionerPowerSettings AirConditioner::getPowerSetting() const {

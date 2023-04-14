@@ -8,7 +8,6 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <limits>
 #include "Heater.h"
 #include "Cooler.h"
 #include "ThermalExchangeEnum.h"
@@ -18,50 +17,37 @@ using namespace std;
 // Based on the yearly currentTemperature in Belgium
 constexpr float MIN_ROOM_TEMPERATURE = -10;
 constexpr float MAX_ROOM_TEMPERATURE = 40;
-// Based on the heater at my home and the one in my office
-constexpr float MIN_VALID_ADJUSTABLE_TEMPERATURE = 5;
-constexpr float MAX_VALID_ADJUSTABLE_TEMPERATURE = 30;
 
 class Room {
 public:
-    Room(float currentTemperature, float minTemperature, float maxTemperature);
+    explicit Room(float currentTemperature);
 
     virtual ~Room() = default;
 
-    void temperatureRegulationOn();
-    void temperatureRegulationOff();
-    void regulateTemperature();
     void applyThermalExchange();
 
     void addHeater(shared_ptr<Heater> heater);
     void removeHeater(shared_ptr<Heater> heater);
-    void notifyHeaters(float& currentTemperature, float minTemperature, float maxTemperature);
+    void notifyHeaters(float& currentTemperature);
 
     void addCooler(shared_ptr<Cooler> cooler);
     void removeCooler(shared_ptr<Cooler> cooler);
-    void notifyCoolers(float& currentTemperature, float minTemperature, float maxTemperature);
+    void notifyCoolers(float& currentTemperature);
 
-    float getTemperature() const;
-    float getMinTemperature() const;
-    float getMaxTemperature() const;
-    void setTemperature(float temperature);
-    void setMinTemperature(float minTemperature);
-    void setMaxTemperature(float maxTemperature);
+    const vector<shared_ptr<Heater>>& getHeaters() const;
+    const vector<shared_ptr<Cooler>>& getCoolers() const;
+    float& getCurrentTemperature();
+    void setCurrentTemperature(float temperature);
     void setThermalExchange(ThermalExchange thermalExchange);
 
 private:
     float currentTemperature;
-    float minTemperature = numeric_limits<float>::max();
-    float maxTemperature = numeric_limits<float>::min();
     ThermalExchange thermalExchange = ThermalExchange::None;
-    bool temperatureRegulationEnabled = false;
     vector<shared_ptr<Heater>> heaters;
     vector<shared_ptr<Cooler>> coolers;
 
-    void isAdjustableTemperatureValid(float temperature);
-    void roundTemperature(float& temperature);
+    float roundTemperature(float temperature);
     string temperatureToString(float temperature);
-
 };
 
 

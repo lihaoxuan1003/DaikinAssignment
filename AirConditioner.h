@@ -16,8 +16,6 @@ public:
 
     ~AirConditioner() override = default;
 
-    void update(float& currentTemperature, float minTemperature, float maxTemperature) override;
-
     void cool(float& temperature) override;
     void heat(float& temperature) override;
 

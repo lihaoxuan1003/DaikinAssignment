@@ -8,7 +8,8 @@ set(SRC_FILES
         main.cpp
         Room.cpp
         Radiator.cpp
-        AirConditioner.cpp)
+        AirConditioner.cpp
+        TemperatureRegulator.cpp)
 
 set(HEADER_FILES
         Room.h
@@ -18,10 +19,11 @@ set(HEADER_FILES
         AirConditioner.h
         RadiatorEnum.h
         AirConditionerEnum.h
-        ThermalExchangeEnum.h)
+        ThermalExchangeEnum.h
+        TemperatureRegulator.h)
 
 set(TEST_FILES
-        DaikinAssignmentTest/DaikinAssignmentTest.cpp )
+        DaikinAssignmentTest/DaikinAssignmentTest.cpp)
 
 add_library(DaikinAssignmentLib STATIC ${SRC_FILES} ${HEADER_FILES})
 

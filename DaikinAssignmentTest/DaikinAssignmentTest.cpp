@@ -15,264 +15,300 @@
 #include <cmath>
 
 void DaikinAssignmentTest::SetUp() {
-    officeRoom = make_unique<Room>(TEMPERATURE_MEDIUM, TEMPERATURE_LOW, TEMPERATURE_HIGH);
     radiator = make_shared<Radiator>(RadiatorValveSettings::SettingFive);
     airConditioner = make_shared<AirConditioner>(AirConditionerPowerSettings::Medium);
 
+    officeRoom = make_shared<Room>(TEMPERATURE_MEDIUM);
     officeRoom->addHeater(radiator);
     officeRoom->addCooler(airConditioner);
-
     officeRoom->setThermalExchange(ThermalExchange::None);
+
+    temperatureRegulator = make_unique<TemperatureRegulator>(officeRoom, TEMPERATURE_LOW, TEMPERATURE_HIGH);
 }
 
 float DaikinAssignmentTest::roundTemperature(float temperature) {
-    float temp =static_cast<float>(round(temperature * 10)) / 10;
-    return temp;
+    return static_cast<float>(round(temperature * 10)) / 10;
 }
 
 TEST_F(DaikinAssignmentTest, TestNotEnoughHeaterOrCooler) {
-    unique_ptr<Room> room = make_unique<Room>(TEMPERATURE_MEDIUM, TEMPERATURE_LOW, TEMPERATURE_HIGH);
-    EXPECT_THROW(room->temperatureRegulationOn(), invalid_argument);
+    TemperatureRegulator temperatureRegulator = TemperatureRegulator(make_shared<Room>(TEMPERATURE_MEDIUM), TEMPERATURE_LOW, TEMPERATURE_HIGH);
+    EXPECT_THROW(temperatureRegulator.temperatureRegulationOn(), invalid_argument);
 }
 
 TEST_F(DaikinAssignmentTest, TestThermalExchange) {
     ThermalExchange thermalExchange = ThermalExchange::NegativeHigh;
     officeRoom->setThermalExchange(thermalExchange);
-    officeRoom->setTemperature(TEMPERATURE_MEDIUM);
+    officeRoom->setCurrentTemperature(TEMPERATURE_MEDIUM);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
         officeRoom->applyThermalExchange();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), roundTemperature(TEMPERATURE_MEDIUM + NUMBER_OF_REGULATIONS_PER_HOUR * thermalExchangeValues[static_cast<size_t>(thermalExchange)]));
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), roundTemperature(TEMPERATURE_MEDIUM + NUMBER_OF_REGULATIONS_PER_HOUR * thermalExchangeValues[static_cast<size_t>(thermalExchange)]));
 
     thermalExchange = ThermalExchange::PositiveMedium;
     officeRoom->setThermalExchange(thermalExchange);
-    officeRoom->setTemperature(TEMPERATURE_MEDIUM);
+    officeRoom->setCurrentTemperature(TEMPERATURE_MEDIUM);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
         officeRoom->applyThermalExchange();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), roundTemperature(TEMPERATURE_MEDIUM + NUMBER_OF_REGULATIONS_PER_HOUR * thermalExchangeValues[static_cast<size_t>(thermalExchange)]));
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), roundTemperature(TEMPERATURE_MEDIUM + NUMBER_OF_REGULATIONS_PER_HOUR * thermalExchangeValues[static_cast<size_t>(thermalExchange)]));
     officeRoom->setThermalExchange(ThermalExchange::None);
 }
 
 TEST_F(DaikinAssignmentTest, TestHeating) {
-    officeRoom->setTemperature(TEMPERATURE_LOW - 5);
+    officeRoom->setCurrentTemperature(TEMPERATURE_LOW - 5);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_LOW - 5);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW - 5);
 
-    officeRoom->temperatureRegulationOn();
+    temperatureRegulator->temperatureRegulationOn();
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 2; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_LOW);
-    officeRoom->setTemperature(TEMPERATURE_LOW - 2);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW);
+    officeRoom->setCurrentTemperature(TEMPERATURE_LOW - 2);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 2; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_LOW);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW);
 
-    officeRoom->temperatureRegulationOff();
-    officeRoom->setTemperature(TEMPERATURE_LOW - 10);
+    temperatureRegulator->temperatureRegulationOff();
+    officeRoom->setCurrentTemperature(TEMPERATURE_LOW - 10);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 2; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_LOW - 10);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW - 10);
+}
+
+TEST_F(DaikinAssignmentTest, TestHeatingWithAirConditioner) {
+    officeRoom->removeHeater(radiator);
+    officeRoom->addHeater(airConditioner);
+
+    officeRoom->setCurrentTemperature(TEMPERATURE_LOW - 5);
+    for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
+        officeRoom->applyThermalExchange();
+        temperatureRegulator->regulateTemperature();
+    }
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW - 5);
+
+    temperatureRegulator->temperatureRegulationOn();
+    for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 4; i++) {
+        officeRoom->applyThermalExchange();
+        temperatureRegulator->regulateTemperature();
+    }
+    EXPECT_GT(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW);
+    officeRoom->setCurrentTemperature(TEMPERATURE_LOW - 2);
+    for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 2; i++) {
+        officeRoom->applyThermalExchange();
+        temperatureRegulator->regulateTemperature();
+    }
+    EXPECT_GT(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW);
+
+    temperatureRegulator->temperatureRegulationOff();
+    officeRoom->setCurrentTemperature(TEMPERATURE_LOW - 10);
+    for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 2; i++) {
+        officeRoom->applyThermalExchange();
+        temperatureRegulator->regulateTemperature();
+    }
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW - 10);
+
+    officeRoom->removeHeater(airConditioner);
+    officeRoom->addHeater(radiator);
 }
 
 TEST_F(DaikinAssignmentTest, TestHeatingWithThermalExchangeLow) {
     ThermalExchange thermalExchange = ThermalExchange::NegativeLow;
     officeRoom->setThermalExchange(thermalExchange);
-    officeRoom->setTemperature(TEMPERATURE_LOW);
-    officeRoom->setMinTemperature(TEMPERATURE_MEDIUM);
-    officeRoom->temperatureRegulationOn();
+    officeRoom->setCurrentTemperature(TEMPERATURE_LOW);
+    temperatureRegulator->setMinTemperature(TEMPERATURE_MEDIUM);
+    temperatureRegulator->temperatureRegulationOn();
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 3; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_GT(officeRoom->getTemperature(), TEMPERATURE_MEDIUM);
+    EXPECT_GT(officeRoom->getCurrentTemperature(), TEMPERATURE_MEDIUM);
 
     thermalExchange = ThermalExchange::PositiveLow;
     officeRoom->setThermalExchange(thermalExchange);
-    officeRoom->setTemperature(TEMPERATURE_MEDIUM);
-    officeRoom->setMaxTemperature(TEMPERATURE_LOW);
-    officeRoom->temperatureRegulationOn();
-    for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 4; i++) {
+    officeRoom->setCurrentTemperature(TEMPERATURE_MEDIUM);
+    temperatureRegulator->setMaxTemperature(TEMPERATURE_LOW);
+    temperatureRegulator->temperatureRegulationOn();
+    for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 5; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_LT(officeRoom->getTemperature(), TEMPERATURE_LOW);
+    EXPECT_LT(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW);
 
-    officeRoom->temperatureRegulationOff();
+    temperatureRegulator->temperatureRegulationOff();
 }
 
 TEST_F(DaikinAssignmentTest, TestHeatingWithThermalExchangeVeryHighNotEnoughHeating) {
     ThermalExchange thermalExchange = ThermalExchange::NegativeVeryHigh;
     officeRoom->setThermalExchange(thermalExchange);
-    officeRoom->setTemperature(TEMPERATURE_LOW);
-    officeRoom->setMinTemperature(TEMPERATURE_MEDIUM);
-    officeRoom->temperatureRegulationOn();
+    officeRoom->setCurrentTemperature(TEMPERATURE_LOW);
+    temperatureRegulator->setMinTemperature(TEMPERATURE_MEDIUM);
+    temperatureRegulator->temperatureRegulationOn();
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 3; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_LT(officeRoom->getTemperature(), TEMPERATURE_LOW);
+    EXPECT_LT(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW);
 
-    officeRoom->temperatureRegulationOff();
+    temperatureRegulator->temperatureRegulationOff();
 }
 
 TEST_F(DaikinAssignmentTest, TestHeatingWithThermalExchangeVeryHighNotEnoughCooling) {
     ThermalExchange thermalExchange = ThermalExchange::PositiveVeryHigh;
     officeRoom->setThermalExchange(thermalExchange);
-    officeRoom->setTemperature(TEMPERATURE_HIGH);
-    officeRoom->setMaxTemperature(TEMPERATURE_MEDIUM);
-    officeRoom->temperatureRegulationOn();
+    officeRoom->setCurrentTemperature(TEMPERATURE_HIGH);
+    temperatureRegulator->setMaxTemperature(TEMPERATURE_MEDIUM);
+    temperatureRegulator->temperatureRegulationOn();
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 3; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_GT(officeRoom->getTemperature(), TEMPERATURE_HIGH);
+    EXPECT_GT(officeRoom->getCurrentTemperature(), TEMPERATURE_HIGH);
 
-    officeRoom->temperatureRegulationOff();
+    temperatureRegulator->temperatureRegulationOff();
 }
 
 TEST_F(DaikinAssignmentTest, TestDifferetRadiatorValveSettings) {
-    officeRoom->temperatureRegulationOn();
+    temperatureRegulator->temperatureRegulationOn();
 
-    officeRoom->setTemperature(MIN_ROOM_TEMPERATURE);
-    officeRoom->setMinTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE);
+    officeRoom->setCurrentTemperature(MIN_ROOM_TEMPERATURE);
+    temperatureRegulator->setMinTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE);
     radiator->setValveSetting(RadiatorValveSettings::SettingOne);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 24; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(),
+    EXPECT_EQ(officeRoom->getCurrentTemperature(),
               radiatorValveTemperatures[static_cast<size_t>(RadiatorValveSettings::SettingOne)]);
 
-    officeRoom->setTemperature(MIN_ROOM_TEMPERATURE);
-    officeRoom->setMinTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE);
+    officeRoom->setCurrentTemperature(MIN_ROOM_TEMPERATURE);
+    temperatureRegulator->setMinTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE);
     radiator->setValveSetting(RadiatorValveSettings::SettingFive);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 24; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), MAX_VALID_ADJUSTABLE_TEMPERATURE);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), MAX_VALID_ADJUSTABLE_TEMPERATURE);
 
-    officeRoom->temperatureRegulationOff();
+    temperatureRegulator->temperatureRegulationOff();
 }
 
 TEST_F(DaikinAssignmentTest, TestCooling) {
-    officeRoom->setTemperature(TEMPERATURE_HIGH + 5);
+    officeRoom->setCurrentTemperature(TEMPERATURE_HIGH + 5);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_HIGH + 5);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_HIGH + 5);
 
-    officeRoom->temperatureRegulationOn();
+    temperatureRegulator->temperatureRegulationOn();
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 5; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    officeRoom->setTemperature(TEMPERATURE_HIGH + 3);
+    officeRoom->setCurrentTemperature(TEMPERATURE_HIGH + 3);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 5; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_HIGH);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_HIGH);
 
 
-    officeRoom->temperatureRegulationOff();
-    officeRoom->setTemperature(TEMPERATURE_HIGH + 10);
+    temperatureRegulator->temperatureRegulationOff();
+    officeRoom->setCurrentTemperature(TEMPERATURE_HIGH + 10);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 10; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_HIGH + 10);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_HIGH + 10);
 }
 
 TEST_F(DaikinAssignmentTest, TestDifferentAirConditionerPowerSettings) {
-    officeRoom->temperatureRegulationOn();
+    temperatureRegulator->temperatureRegulationOn();
 
-    officeRoom->setTemperature(TEMPERATURE_HIGH);
-    officeRoom->setMaxTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE);
+    officeRoom->setCurrentTemperature(TEMPERATURE_HIGH);
+    temperatureRegulator->setMaxTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE);
     airConditioner->setPowerSetting(AirConditionerPowerSettings::Eco);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 10; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_GT(officeRoom->getTemperature(), MIN_VALID_ADJUSTABLE_TEMPERATURE);
+    EXPECT_GT(officeRoom->getCurrentTemperature(), MIN_VALID_ADJUSTABLE_TEMPERATURE);
 
-    officeRoom->setTemperature(TEMPERATURE_HIGH);
-    officeRoom->setMaxTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE);
+    officeRoom->setCurrentTemperature(TEMPERATURE_HIGH);
+    temperatureRegulator->setMaxTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE);
     airConditioner->setPowerSetting(AirConditionerPowerSettings::High);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 10; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), MIN_VALID_ADJUSTABLE_TEMPERATURE);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), MIN_VALID_ADJUSTABLE_TEMPERATURE);
 
-    officeRoom->temperatureRegulationOff();
+    temperatureRegulator->temperatureRegulationOff();
 }
 
 TEST_F(DaikinAssignmentTest, TestSetMinTemperature) {
-    officeRoom->temperatureRegulationOn();
-    officeRoom->setTemperature(TEMPERATURE_MEDIUM);
+    temperatureRegulator->temperatureRegulationOn();
+    officeRoom->setCurrentTemperature(TEMPERATURE_MEDIUM);
 
-    officeRoom->setMinTemperature(TEMPERATURE_MEDIUM + 5);
+    temperatureRegulator->setMinTemperature(TEMPERATURE_MEDIUM + 5);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 5; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_MEDIUM + 5);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_MEDIUM + 5);
 
-    officeRoom->setMinTemperature(TEMPERATURE_HIGH + 5);
+    temperatureRegulator->setMinTemperature(TEMPERATURE_HIGH + 5);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 5; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_HIGH + 5);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_HIGH + 5);
 
-    EXPECT_EQ(officeRoom->getMinTemperature(), TEMPERATURE_HIGH + 5);
-    EXPECT_EQ(officeRoom->getMinTemperature(), officeRoom->getMaxTemperature());
+    EXPECT_EQ(temperatureRegulator->getMinTemperature(), TEMPERATURE_HIGH + 5);
+    EXPECT_EQ(temperatureRegulator->getMinTemperature(), temperatureRegulator->getMaxTemperature());
 
-    officeRoom->temperatureRegulationOff();
+    temperatureRegulator->temperatureRegulationOff();
 }
 
 TEST_F(DaikinAssignmentTest, TestSetMaxTemperature) {
-    officeRoom->temperatureRegulationOn();
-    officeRoom->setTemperature(TEMPERATURE_MEDIUM);
+    temperatureRegulator->temperatureRegulationOn();
+    officeRoom->setCurrentTemperature(TEMPERATURE_MEDIUM);
 
-    officeRoom->setMaxTemperature(TEMPERATURE_MEDIUM - 5);
+    temperatureRegulator->setMaxTemperature(TEMPERATURE_MEDIUM - 5);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 5; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_MEDIUM - 5);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_MEDIUM - 5);
 
-    officeRoom->setMaxTemperature(TEMPERATURE_LOW - 5);
+    temperatureRegulator->setMaxTemperature(TEMPERATURE_LOW - 5);
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 5; i++) {
         officeRoom->applyThermalExchange();
-        officeRoom->regulateTemperature();
+        temperatureRegulator->regulateTemperature();
     }
-    EXPECT_EQ(officeRoom->getTemperature(), TEMPERATURE_LOW - 5);
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), TEMPERATURE_LOW - 5);
 
-    EXPECT_EQ(officeRoom->getMaxTemperature(), TEMPERATURE_LOW - 5);
-    EXPECT_EQ(officeRoom->getMinTemperature(), officeRoom->getMaxTemperature());
+    EXPECT_EQ(temperatureRegulator->getMaxTemperature(), TEMPERATURE_LOW - 5);
+    EXPECT_EQ(temperatureRegulator->getMinTemperature(), temperatureRegulator->getMaxTemperature());
 
-    officeRoom->temperatureRegulationOff();
+    temperatureRegulator->temperatureRegulationOff();
 }
 
 TEST_F(DaikinAssignmentTest, TestTemperaturesInvalid) {
-    EXPECT_THROW(make_unique<Room>(TEMPERATURE_MEDIUM, TEMPERATURE_MEDIUM + 5, TEMPERATURE_MEDIUM - 5), invalid_argument);
-    EXPECT_THROW(officeRoom->setTemperature(MIN_ROOM_TEMPERATURE - 1), invalid_argument);
-    EXPECT_THROW(officeRoom->setTemperature(MAX_ROOM_TEMPERATURE + 1), invalid_argument);
-    EXPECT_THROW(officeRoom->setMinTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE - 1), invalid_argument);
-    EXPECT_THROW(officeRoom->setMinTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE + 1), invalid_argument);
-    EXPECT_THROW(officeRoom->setMaxTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE - 1), invalid_argument);
-    EXPECT_THROW(officeRoom->setMaxTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE + 1), invalid_argument);
+    EXPECT_THROW(make_unique<TemperatureRegulator>(officeRoom, TEMPERATURE_MEDIUM + 5, TEMPERATURE_MEDIUM - 5), invalid_argument);
+    EXPECT_THROW(officeRoom->setCurrentTemperature(MIN_ROOM_TEMPERATURE - 1), invalid_argument);
+    EXPECT_THROW(officeRoom->setCurrentTemperature(MAX_ROOM_TEMPERATURE + 1), invalid_argument);
+    EXPECT_THROW(temperatureRegulator->setMinTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE - 1), invalid_argument);
+    EXPECT_THROW(temperatureRegulator->setMinTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE + 1), invalid_argument);
+    EXPECT_THROW(temperatureRegulator->setMaxTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE - 1), invalid_argument);
+    EXPECT_THROW(temperatureRegulator->setMaxTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE + 1), invalid_argument);
 }
