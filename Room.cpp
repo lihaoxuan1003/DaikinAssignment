@@ -84,3 +84,7 @@ string Room::temperatureToString(float temperature) {
     string temperatureString = to_string(temperature);
     return temperatureString.substr(0, temperatureString.find('.') + 2);
 }
+
+ThermalExchange Room::getThermalExchange() const {
+    return thermalExchange;
+}

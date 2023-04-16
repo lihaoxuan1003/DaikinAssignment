@@ -6,6 +6,7 @@
 #define DAIKINASSIGNMENT_TEMPERATUREREGULATOR_H
 
 #include <limits>
+#include <queue>
 #include "Room.h"
 
 // Based on the heater at my home and the one in my office
@@ -40,8 +41,18 @@ private:
     float previousTemperature;
     bool temperatureRegulationEnabled = false;
     bool autoControlEnabled = false;
+    bool autoHeatingSufficient = false;
+    bool autoCoolingSufficient = false;
 
+    queue<int> heatersSettingsBackup;
+    queue<int> coolersSettingsBackup;
 
+    void autoAdjustHeaters();
+    void autoAdjustCoolers();
+    bool isHeatingPowerAtMaxLevel();
+    bool isCoolingPowerAtMaxLevel();
+    bool isAutoHeatingSufficient();
+    bool isAutoCoolingSufficient();
     void isAdjustableTemperatureValid(float temperature);
     float roundTemperature(float temperature);
     string temperatureToString(float temperature);

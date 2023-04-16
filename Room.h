@@ -37,6 +37,7 @@ public:
     const vector<shared_ptr<Heater>>& getHeaters() const;
     const vector<shared_ptr<Cooler>>& getCoolers() const;
     float& getCurrentTemperature();
+    ThermalExchange getThermalExchange() const;
     void setCurrentTemperature(float temperature);
     void setThermalExchange(ThermalExchange thermalExchange);
 

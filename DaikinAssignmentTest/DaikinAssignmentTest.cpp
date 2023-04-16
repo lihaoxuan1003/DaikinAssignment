@@ -31,7 +31,8 @@ float DaikinAssignmentTest::roundTemperature(float temperature) {
 }
 
 TEST_F(DaikinAssignmentTest, TestNotEnoughHeaterOrCooler) {
-    TemperatureRegulator temperatureRegulator = TemperatureRegulator(make_shared<Room>(TEMPERATURE_MEDIUM), TEMPERATURE_LOW, TEMPERATURE_HIGH);
+    TemperatureRegulator temperatureRegulator = TemperatureRegulator(make_shared<Room>(TEMPERATURE_MEDIUM),
+                                                                     TEMPERATURE_LOW, TEMPERATURE_HIGH);
     EXPECT_THROW(temperatureRegulator.temperatureRegulationOn(), invalid_argument);
 }
 
@@ -42,7 +43,9 @@ TEST_F(DaikinAssignmentTest, TestThermalExchange) {
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
         officeRoom->applyThermalExchange();
     }
-    EXPECT_EQ(officeRoom->getCurrentTemperature(), roundTemperature(TEMPERATURE_MEDIUM + NUMBER_OF_REGULATIONS_PER_HOUR * thermalExchangeValues[static_cast<size_t>(thermalExchange)]));
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), roundTemperature(TEMPERATURE_MEDIUM +
+                                                                    NUMBER_OF_REGULATIONS_PER_HOUR *
+                                                                    thermalExchangeValues[static_cast<size_t>(thermalExchange)]));
 
     thermalExchange = ThermalExchange::PositiveMedium;
     officeRoom->setThermalExchange(thermalExchange);
@@ -50,7 +53,9 @@ TEST_F(DaikinAssignmentTest, TestThermalExchange) {
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
         officeRoom->applyThermalExchange();
     }
-    EXPECT_EQ(officeRoom->getCurrentTemperature(), roundTemperature(TEMPERATURE_MEDIUM + NUMBER_OF_REGULATIONS_PER_HOUR * thermalExchangeValues[static_cast<size_t>(thermalExchange)]));
+    EXPECT_EQ(officeRoom->getCurrentTemperature(), roundTemperature(TEMPERATURE_MEDIUM +
+                                                                    NUMBER_OF_REGULATIONS_PER_HOUR *
+                                                                    thermalExchangeValues[static_cast<size_t>(thermalExchange)]));
     officeRoom->setThermalExchange(ThermalExchange::None);
 }
 
@@ -304,11 +309,73 @@ TEST_F(DaikinAssignmentTest, TestSetMaxTemperature) {
 }
 
 TEST_F(DaikinAssignmentTest, TestTemperaturesInvalid) {
-    EXPECT_THROW(make_unique<TemperatureRegulator>(officeRoom, TEMPERATURE_MEDIUM + 5, TEMPERATURE_MEDIUM - 5), invalid_argument);
+    EXPECT_THROW(make_unique<TemperatureRegulator>(officeRoom, TEMPERATURE_MEDIUM + 5, TEMPERATURE_MEDIUM - 5),
+                 invalid_argument);
     EXPECT_THROW(officeRoom->setCurrentTemperature(MIN_ROOM_TEMPERATURE - 1), invalid_argument);
     EXPECT_THROW(officeRoom->setCurrentTemperature(MAX_ROOM_TEMPERATURE + 1), invalid_argument);
     EXPECT_THROW(temperatureRegulator->setMinTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE - 1), invalid_argument);
     EXPECT_THROW(temperatureRegulator->setMinTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE + 1), invalid_argument);
     EXPECT_THROW(temperatureRegulator->setMaxTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE - 1), invalid_argument);
     EXPECT_THROW(temperatureRegulator->setMaxTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE + 1), invalid_argument);
+}
+
+TEST_F(DaikinAssignmentTest, TestAutoControlHeating) {
+    auto meetingRoom = make_shared<Room>(TEMPERATURE_LOW);
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingOne));
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingZero));
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingZero));
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingZero));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Eco));
+    meetingRoom->setThermalExchange(ThermalExchange::NegativeVeryHigh);
+    TemperatureRegulator meetingRoomRegulator = TemperatureRegulator(meetingRoom, TEMPERATURE_MEDIUM, TEMPERATURE_HIGH);
+
+    meetingRoomRegulator.temperatureRegulationOn();
+
+    meetingRoom->setCurrentTemperature(TEMPERATURE_LOW);
+    for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
+        meetingRoom->applyThermalExchange();
+        meetingRoomRegulator.regulateTemperature();
+    }
+    EXPECT_LT(meetingRoom->getCurrentTemperature(), TEMPERATURE_LOW);
+
+    meetingRoomRegulator.autoControlOn();
+    meetingRoom->setCurrentTemperature(TEMPERATURE_LOW);
+    for (int i = 0; i < 10 * NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
+        meetingRoom->applyThermalExchange();
+        meetingRoomRegulator.regulateTemperature();
+    }
+    EXPECT_GE(meetingRoom->getCurrentTemperature(), TEMPERATURE_MEDIUM);
+}
+
+
+TEST_F(DaikinAssignmentTest, TestAutoControlCooling) {
+    auto meetingRoom = make_shared<Room>(TEMPERATURE_HIGH);
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingOne));
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingZero));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Eco));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->setThermalExchange(ThermalExchange::PositiveVeryHigh);
+    TemperatureRegulator meetingRoomRegulator = TemperatureRegulator(meetingRoom, TEMPERATURE_LOW, TEMPERATURE_MEDIUM);
+
+    meetingRoomRegulator.temperatureRegulationOn();
+
+    meetingRoom->setCurrentTemperature(TEMPERATURE_HIGH);
+    for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
+        meetingRoom->applyThermalExchange();
+        meetingRoomRegulator.regulateTemperature();
+    }
+    EXPECT_GT(meetingRoom->getCurrentTemperature(), TEMPERATURE_LOW);
+
+    meetingRoomRegulator.autoControlOn();
+    meetingRoom->setCurrentTemperature(TEMPERATURE_HIGH);
+    for (int i = 0; i < 100 * NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
+        meetingRoom->applyThermalExchange();
+        meetingRoomRegulator.regulateTemperature();
+    }
+    EXPECT_LE(meetingRoom->getCurrentTemperature(), TEMPERATURE_MEDIUM);
 }

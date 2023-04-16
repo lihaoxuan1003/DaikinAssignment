@@ -9,7 +9,8 @@
 #include <array>
 
 enum class AirConditionerPowerSettings {
-    Eco = 0,
+    Off = 0,
+    Eco,
     Low,
     Medium,
     High,
@@ -18,6 +19,7 @@ enum class AirConditionerPowerSettings {
 
 // the increments of current temperature in 10 mins
 constexpr array<float, static_cast<size_t>(AirConditionerPowerSettings::NumberOfSettings)> temperatureIncrements = {
+        0.0,
         0.1,
         0.2,
         0.3,
@@ -26,6 +28,7 @@ constexpr array<float, static_cast<size_t>(AirConditionerPowerSettings::NumberOf
 
 // the decrements of current temperature in 10 mins
 constexpr array<float, static_cast<size_t>(AirConditionerPowerSettings::NumberOfSettings)> temperatureDecrements = {
+         0.0,
         -0.1,
         -0.2,
         -0.3,

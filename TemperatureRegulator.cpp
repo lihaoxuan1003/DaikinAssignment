@@ -4,7 +4,10 @@
 
 #include <cmath>
 #include <utility>
+#include <iostream>
 #include "TemperatureRegulator.h"
+#include "Radiator.h"
+#include "AirConditioner.h"
 
 #define FLOATING_OPERATION_PRECISION 0.01
 
@@ -33,24 +36,32 @@ void TemperatureRegulator::regulateTemperature() {
     if (!temperatureRegulationEnabled)
         return;
 
-    if(autoControlEnabled)
-    {
-
-    }
-
     auto& currentTemperature = room->getCurrentTemperature();
 
-    if (minTemperature - currentTemperature >= FLOATING_OPERATION_PRECISION)
+    if (minTemperature - currentTemperature >= FLOATING_OPERATION_PRECISION) {
+        if (autoControlEnabled && !autoHeatingSufficient)
+            autoAdjustHeaters();
         room->notifyHeaters(currentTemperature);
+        if (autoControlEnabled)
+            autoHeatingSufficient = isAutoHeatingSufficient();
+    }
 
 
-    if (currentTemperature - maxTemperature >= FLOATING_OPERATION_PRECISION)
+    if (currentTemperature - maxTemperature >= FLOATING_OPERATION_PRECISION){
+        if (autoControlEnabled && !autoCoolingSufficient)
+            autoAdjustCoolers();
         room->notifyCoolers(currentTemperature);
+        if (autoControlEnabled)
+            autoCoolingSufficient = isAutoCoolingSufficient();
+    }
+
+
+
 
     currentTemperature = roundTemperature(currentTemperature);
     //   cout << "Temperature regulated current room currentTemperature is: " << temperatureToString(currentTemperature) << endl;
 
-
+    previousTemperature = currentTemperature;
 }
 
 float TemperatureRegulator::getMinTemperature() const {
@@ -96,7 +107,7 @@ string TemperatureRegulator::temperatureToString(float temperature) {
     return temperatureString.substr(0, temperatureString.find('.') + 2);
 }
 
-const shared_ptr<Room> &TemperatureRegulator::getRoom() const {
+const shared_ptr<Room>& TemperatureRegulator::getRoom() const {
     return room;
 }
 
@@ -105,9 +116,174 @@ void TemperatureRegulator::setRoom(const shared_ptr<Room>& room) {
 }
 
 void TemperatureRegulator::autoControlOn() {
+    for (const auto& heater: room->getHeaters()) {
+        if (auto radiator = dynamic_cast<Radiator *>(heater.get())) {
+            heatersSettingsBackup.push(static_cast<int>(radiator->getValveSetting()));
+            radiator->setValveSetting(RadiatorValveSettings::SettingZero);
+        } else if (auto airConditioner = dynamic_cast<AirConditioner *>(heater.get())) {
+            heatersSettingsBackup.push(static_cast<int>(airConditioner->getPowerSetting()));
+            airConditioner->setPowerSetting(AirConditionerPowerSettings::Off);
+        } else {
+            try {
+                throw exception();
+            } catch (const exception& e) {
+                cerr << "Exception: Unexpected heater type." << '\n';
+            }
+        }
+    }
+
+    for (const auto& cooler: room->getCoolers()) {
+        if (auto airConditioner = dynamic_cast<AirConditioner *>(cooler.get())) {
+            coolersSettingsBackup.push(static_cast<int>(airConditioner->getPowerSetting()));
+            airConditioner->setPowerSetting(AirConditionerPowerSettings::Off);
+        } else {
+            try {
+                throw exception();
+            } catch (const exception& e) {
+                cerr << "Exception: Unexpected cooler type." << '\n';
+            }
+        }
+    }
     autoControlEnabled = true;
+    autoHeatingSufficient = false;
+    autoCoolingSufficient = false;
 }
 
 void TemperatureRegulator::autoControlOff() {
+    if (heatersSettingsBackup.empty() || coolersSettingsBackup.empty() ){
+        autoControlEnabled = false;
+        return;
+    }
+
+    for (const auto& heater: room->getHeaters()) {
+        if (auto radiator = dynamic_cast<Radiator*>(heater.get())) {
+            radiator->setValveSetting(static_cast<RadiatorValveSettings>(heatersSettingsBackup.front()));
+            heatersSettingsBackup.pop();
+        } else if (auto airConditioner = dynamic_cast<AirConditioner*>(heater.get())) {
+            airConditioner->setPowerSetting(static_cast<AirConditionerPowerSettings>(heatersSettingsBackup.front()));
+            heatersSettingsBackup.pop();
+        } else {
+            try {
+                throw exception();
+            } catch (const exception& e) {
+                cerr << "Exception: Unexpected heater type.`" << '\n';
+            }
+        }
+    }
+
+    for (const auto& cooler: room->getCoolers()) {
+        if (auto airConditioner = dynamic_cast<AirConditioner*>(cooler.get())) {
+            airConditioner->setPowerSetting(static_cast<AirConditionerPowerSettings>(coolersSettingsBackup.front()));
+            coolersSettingsBackup.pop();
+        } else {
+            try {
+                throw exception();
+            } catch (const exception& e) {
+                cerr << "Exception: Unexpected cooler type." << '\n';
+            }
+        }
+    }
     autoControlEnabled = false;
+    autoHeatingSufficient = false;
+    autoCoolingSufficient = false;
+}
+
+void TemperatureRegulator::autoAdjustHeaters() {
+    // increase the heating power
+    // use all the radiators before air-conditioners
+    for (const auto& heater: room->getHeaters()) {
+        if (auto radiator = dynamic_cast<Radiator*>(heater.get())) {
+            if (radiator->getValveSetting() != RadiatorValveSettings::SettingFive) {
+                radiator->setValveSetting(RadiatorValveSettings::SettingFive);
+                return;
+            }
+        }
+    }
+
+    for (const auto& heater: room->getHeaters()) {
+        if (auto airConditioner = dynamic_cast<AirConditioner*>(heater.get())) {
+            if (airConditioner->getPowerSetting() != AirConditionerPowerSettings::High) {
+                airConditioner->setPowerSetting(
+                        static_cast<AirConditionerPowerSettings>(static_cast<int>(airConditioner->getPowerSetting()) +
+                                                                 1));
+                return;
+            }
+        }
+    }
+}
+
+void TemperatureRegulator::autoAdjustCoolers() {
+    for (const auto& cooler: room->getCoolers()) {
+        if (auto airConditioner = dynamic_cast<AirConditioner*>(cooler.get())) {
+            if (airConditioner->getPowerSetting() != AirConditionerPowerSettings::High) {
+                airConditioner->setPowerSetting(
+                        static_cast<AirConditionerPowerSettings>(static_cast<int>(airConditioner->getPowerSetting()) +
+                                                                 1));
+                return;
+            }
+        }
+    }
+}
+
+bool TemperatureRegulator::isHeatingPowerAtMaxLevel() {
+    for (const auto& heater: room->getHeaters()) {
+        if (auto radiator = dynamic_cast<Radiator*>(heater.get())) {
+            if (radiator->getValveSetting() != RadiatorValveSettings::SettingFive)
+                return false;
+        } else if (auto airConditioner = dynamic_cast<AirConditioner*>(heater.get())) {
+            if (airConditioner->getPowerSetting() != AirConditionerPowerSettings::High)
+                return false;
+        } else {
+            try {
+                throw exception();
+            } catch (const exception& e) {
+                cerr << "Exception: Unexpected heater type." << '\n';
+            }
+        }
+    }
+    return true;
+}
+
+bool TemperatureRegulator::isCoolingPowerAtMaxLevel() {
+    for (const auto& cooler: room->getCoolers()) {
+        if (auto airConditioner = dynamic_cast<AirConditioner*>(cooler.get())) {
+            if (airConditioner->getPowerSetting() != AirConditionerPowerSettings::High)
+                return false;
+        } else {
+            try {
+                throw exception();
+            } catch (const exception& e) {
+                cerr << "Exception: Unexpected cooler type." << '\n';
+            }
+        }
+    }
+    return true;
+}
+
+bool TemperatureRegulator::isAutoHeatingSufficient() {
+    if (previousTemperature < room->getCurrentTemperature())
+        return true;
+
+    if (room->getThermalExchange()!= ThermalExchange::None && isHeatingPowerAtMaxLevel()){
+        try {
+            throw exception();
+        } catch (const exception& e) {
+            cerr << "Not enough heaters to heat up the room." << '\n';
+        }
+    }
+    return false;
+}
+
+bool TemperatureRegulator::isAutoCoolingSufficient() {
+    if (previousTemperature > room->getCurrentTemperature())
+        return true;
+
+    if (room->getThermalExchange()!= ThermalExchange::None && isCoolingPowerAtMaxLevel()){
+        try {
+            throw exception();
+        } catch (const exception& e) {
+            cerr << "Not enough coolers to cool down the room." << '\n';
+        }
+    }
+    return false;
 }
