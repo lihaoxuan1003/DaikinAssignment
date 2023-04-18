@@ -6,8 +6,8 @@
 #define DAIKINASSIGNMENT_RADIATORENUM_H
 
 #include <array>
-#include "Room.h"
-#include "TemperatureRegulator.h"
+#include "../Room/Room.h"
+#include "../TemperatureRegulator/TemperatureRegulator.h"
 
 enum class RadiatorValveSettings {
     SettingZero = 0,

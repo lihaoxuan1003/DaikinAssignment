@@ -5,7 +5,7 @@
 #ifndef DAIKINASSIGNMENT_RADIATOR_H
 #define DAIKINASSIGNMENT_RADIATOR_H
 
-#include "Heater.h"
+#include "../Heater.h"
 #include "RadiatorEnum.h"
 
 #define RADIATOR_TEMPERATURE_INCREMENT 0.5 // the increment of the temperature in 10 mins

@@ -8,8 +8,8 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "Heater.h"
-#include "Cooler.h"
+#include "../Heater.h"
+#include "../Cooler.h"
 #include "ThermalExchangeEnum.h"
 
 using namespace std;

@@ -5,8 +5,8 @@
 #ifndef DAIKINASSIGNMENT_AIRCONDITIONER_H
 #define DAIKINASSIGNMENT_AIRCONDITIONER_H
 
-#include "Heater.h"
-#include "Cooler.h"
+#include "../Heater.h"
+#include "../Cooler.h"
 #include "AirConditionerEnum.h"
 
 class AirConditioner : public Heater, public Cooler{

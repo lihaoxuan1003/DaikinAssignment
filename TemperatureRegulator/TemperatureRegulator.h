@@ -7,7 +7,7 @@
 
 #include <limits>
 #include <queue>
-#include "Room.h"
+#include "../Room/Room.h"
 #include "TemperatureRegulatorEnum.h"
 
 // Based on the heater at my home and the one in my office

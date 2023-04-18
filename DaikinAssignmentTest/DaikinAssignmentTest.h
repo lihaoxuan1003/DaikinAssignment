@@ -6,10 +6,10 @@
 #define DAIKINASSIGNMENT_DAIKINASSIGNMENTTEST_H
 
 #include <gtest/gtest.h>
-#include "../Room.h"
-#include "../Radiator.h"
-#include "../AirConditioner.h"
-#include "../TemperatureRegulator.h"
+#include "../Room/Room.h"
+#include "../Radiator/Radiator.h"
+#include "../AirConditioner/AirConditioner.h"
+#include "../TemperatureRegulator/TemperatureRegulator.h"
 
 using namespace std;
 

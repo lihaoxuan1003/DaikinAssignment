@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <cmath>
-#include "Room.h"
+#include "Room/Room.h"
 
 #include <gtest/gtest.h>
 

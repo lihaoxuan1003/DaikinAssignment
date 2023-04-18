@@ -5,7 +5,7 @@
 #ifndef DAIKINASSIGNMENT_AIRCONDITIONERENUM_H
 #define DAIKINASSIGNMENT_AIRCONDITIONERENUM_H
 
-#include "Room.h"
+#include "../Room/Room.h"
 #include <array>
 
 enum class AirConditionerPowerSettings {

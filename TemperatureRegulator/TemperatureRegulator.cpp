@@ -6,8 +6,8 @@
 #include <utility>
 #include <iostream>
 #include "TemperatureRegulator.h"
-#include "Radiator.h"
-#include "AirConditioner.h"
+#include "../Radiator/Radiator.h"
+#include "../AirConditioner/AirConditioner.h"
 
 #define FLOATING_OPERATION_PRECISION 0.01
 
