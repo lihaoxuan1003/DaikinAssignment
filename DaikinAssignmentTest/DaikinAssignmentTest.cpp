@@ -340,7 +340,7 @@ TEST_F(DaikinAssignmentTest, TestAutoControlHeating) {
     }
     EXPECT_LT(meetingRoom->getCurrentTemperature(), TEMPERATURE_LOW);
 
-    meetingRoomRegulator.autoControlOn();
+    meetingRoomRegulator.setRegulationMode(TemperatureRegulationModes::AutoControl);
     meetingRoom->setCurrentTemperature(TEMPERATURE_LOW);
     for (int i = 0; i < 10 * NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
         meetingRoom->applyThermalExchange();
@@ -354,8 +354,8 @@ TEST_F(DaikinAssignmentTest, TestAutoControlCooling) {
     auto meetingRoom = make_shared<Room>(TEMPERATURE_HIGH);
     meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingOne));
     meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingZero));
-    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
-    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Eco));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Eco));
     meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Eco));
     meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
     meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
@@ -371,11 +371,86 @@ TEST_F(DaikinAssignmentTest, TestAutoControlCooling) {
     }
     EXPECT_GT(meetingRoom->getCurrentTemperature(), TEMPERATURE_LOW);
 
-    meetingRoomRegulator.autoControlOn();
+    meetingRoomRegulator.setRegulationMode(TemperatureRegulationModes::AutoControl);
     meetingRoom->setCurrentTemperature(TEMPERATURE_HIGH);
-    for (int i = 0; i < 100 * NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
+    for (int i = 0; i < 30 * NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
         meetingRoom->applyThermalExchange();
         meetingRoomRegulator.regulateTemperature();
+        cout << meetingRoom->getCurrentTemperature() << endl;
     }
+    EXPECT_LE(meetingRoom->getCurrentTemperature(), TEMPERATURE_MEDIUM);
+}
+
+
+TEST_F(DaikinAssignmentTest, TestTurboHeating) {
+    auto meetingRoom = make_shared<Room>(TEMPERATURE_LOW);
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingOne));
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingZero));
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingZero));
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingZero));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Eco));
+    meetingRoom->setThermalExchange(ThermalExchange::NegativeVeryHigh);
+    TemperatureRegulator meetingRoomRegulator = TemperatureRegulator(meetingRoom, TEMPERATURE_MEDIUM, TEMPERATURE_HIGH);
+
+    meetingRoomRegulator.temperatureRegulationOn();
+
+    meetingRoomRegulator.setRegulationMode(TemperatureRegulationModes::AutoControl);
+    meetingRoom->setCurrentTemperature(TEMPERATURE_LOW);
+    int autoControlCounter = 0;
+    while (meetingRoom->getCurrentTemperature() < TEMPERATURE_MEDIUM) {
+        meetingRoom->applyThermalExchange();
+        meetingRoomRegulator.regulateTemperature();
+        autoControlCounter++;
+    }
+
+    meetingRoomRegulator.setRegulationMode(TemperatureRegulationModes::Turbo);
+    meetingRoom->setCurrentTemperature(TEMPERATURE_LOW);
+    int turboCounter = 0;
+    while (meetingRoom->getCurrentTemperature() < TEMPERATURE_MEDIUM) {
+        meetingRoom->applyThermalExchange();
+        meetingRoomRegulator.regulateTemperature();
+        turboCounter++;
+    }
+
+    EXPECT_GT(autoControlCounter, turboCounter);
+    EXPECT_GE(meetingRoom->getCurrentTemperature(), TEMPERATURE_MEDIUM);
+}
+
+
+TEST_F(DaikinAssignmentTest, TestTurboCooling) {
+    auto meetingRoom = make_shared<Room>(TEMPERATURE_HIGH);
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingOne));
+    meetingRoom->addHeater(make_shared<Radiator>(RadiatorValveSettings::SettingZero));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Eco));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Eco));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Eco));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->addCooler(make_shared<AirConditioner>(AirConditionerPowerSettings::Off));
+    meetingRoom->setThermalExchange(ThermalExchange::PositiveVeryHigh);
+    TemperatureRegulator meetingRoomRegulator = TemperatureRegulator(meetingRoom, TEMPERATURE_LOW, TEMPERATURE_MEDIUM);
+
+    meetingRoomRegulator.temperatureRegulationOn();
+
+    meetingRoomRegulator.setRegulationMode(TemperatureRegulationModes::AutoControl);
+    meetingRoom->setCurrentTemperature(TEMPERATURE_HIGH);
+    int autoControlCounter = 0;
+    while (meetingRoom->getCurrentTemperature() > TEMPERATURE_MEDIUM) {
+        meetingRoom->applyThermalExchange();
+        meetingRoomRegulator.regulateTemperature();
+        autoControlCounter++;
+    }
+
+    meetingRoomRegulator.setRegulationMode(TemperatureRegulationModes::Turbo);
+    meetingRoom->setCurrentTemperature(TEMPERATURE_HIGH);
+    int turboCounter = 0;
+    while (meetingRoom->getCurrentTemperature() > TEMPERATURE_MEDIUM) {
+        meetingRoom->applyThermalExchange();
+        meetingRoomRegulator.regulateTemperature();
+        turboCounter++;
+    }
+
+    EXPECT_GT(autoControlCounter, turboCounter);
     EXPECT_LE(meetingRoom->getCurrentTemperature(), TEMPERATURE_MEDIUM);
 }

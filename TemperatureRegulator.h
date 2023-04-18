@@ -8,6 +8,7 @@
 #include <limits>
 #include <queue>
 #include "Room.h"
+#include "TemperatureRegulatorEnum.h"
 
 // Based on the heater at my home and the one in my office
 constexpr float MIN_VALID_ADJUSTABLE_TEMPERATURE = 5;
@@ -23,16 +24,17 @@ public:
     void temperatureRegulationOn();
     void temperatureRegulationOff();
     void regulateTemperature();
-    void autoControlOn();
-    void autoControlOff();
+
 
     float getMinTemperature() const;
     float getMaxTemperature() const;
     const shared_ptr<Room>& getRoom() const;
+    TemperatureRegulationModes getRegulationMode() const;
 
     void setMinTemperature(float minTemperature);
     void setMaxTemperature(float maxTemperature);
     void setRoom(const shared_ptr<Room>& room);
+    void setRegulationMode(TemperatureRegulationModes regulationMode);
 
 private:
     shared_ptr<Room> room;
@@ -40,19 +42,23 @@ private:
     float maxTemperature = numeric_limits<float>::min();
     float previousTemperature;
     bool temperatureRegulationEnabled = false;
-    bool autoControlEnabled = false;
     bool autoHeatingSufficient = false;
     bool autoCoolingSufficient = false;
+    TemperatureRegulationModes regulationMode = TemperatureRegulationModes::UserControl;
 
     queue<int> heatersSettingsBackup;
     queue<int> coolersSettingsBackup;
 
+    void backupUserSettings();
+    void restoreUserSettings();
     void autoAdjustHeaters();
     void autoAdjustCoolers();
+    void turboAdjustHeaters();
+    void turboAdjustCoolers();
     bool isHeatingPowerAtMaxLevel();
     bool isCoolingPowerAtMaxLevel();
-    bool isAutoHeatingSufficient();
-    bool isAutoCoolingSufficient();
+    bool isHeatingSufficient();
+    bool isCoolingSufficient();
     void isAdjustableTemperatureValid(float temperature);
     float roundTemperature(float temperature);
     string temperatureToString(float temperature);

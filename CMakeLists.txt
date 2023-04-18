@@ -20,10 +20,11 @@ set(HEADER_FILES
         RadiatorEnum.h
         AirConditionerEnum.h
         ThermalExchangeEnum.h
-        TemperatureRegulator.h)
+        TemperatureRegulator.h
+        TemperatureRegulatorEnum.h)
 
 set(TEST_FILES
-        DaikinAssignmentTest/DaikinAssignmentTest.cpp)
+        DaikinAssignmentTest/DaikinAssignmentTest.cpp TemperatureRegulatorEnum.cpp)
 
 add_library(DaikinAssignmentLib STATIC ${SRC_FILES} ${HEADER_FILES})
 
