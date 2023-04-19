@@ -13,6 +13,7 @@
 // Based on the heater at my home and the one in my office
 constexpr float MIN_VALID_ADJUSTABLE_TEMPERATURE = 5;
 constexpr float MAX_VALID_ADJUSTABLE_TEMPERATURE = 30;
+constexpr int OFF = 0;
 
 class TemperatureRegulator {
 public:

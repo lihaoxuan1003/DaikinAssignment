@@ -14,10 +14,26 @@ void AirConditioner::cool(float& temperature) {
     temperature += temperatureDecrements[static_cast<size_t>(powerSetting)];
 }
 
-AirConditionerPowerSettings AirConditioner::getPowerSetting() const {
-    return powerSetting;
+void AirConditioner::setCoolerSetting(int setting) {
+    powerSetting = static_cast<AirConditionerPowerSettings>(setting);
 }
 
-void AirConditioner::setPowerSetting(AirConditionerPowerSettings powerSetting) {
-    this->powerSetting = powerSetting;
+int AirConditioner::getCoolerSetting() {
+    return static_cast<int>(powerSetting);
+}
+
+int AirConditioner::getNumberOfCoolerSettings() {
+    return static_cast<int>(AirConditionerPowerSettings::NumberOfSettings);
+}
+
+void AirConditioner::setHeaterSetting(int setting) {
+    powerSetting = static_cast<AirConditionerPowerSettings>(setting);
+}
+
+int AirConditioner::getHeaterSetting() {
+    return static_cast<int>(powerSetting);
+}
+
+int AirConditioner::getNumberOfHeaterSettings() {
+    return static_cast<int>(AirConditionerPowerSettings::NumberOfSettings);
 }

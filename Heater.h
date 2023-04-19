@@ -9,6 +9,9 @@ class Heater {
 public:
     virtual ~Heater() = default;
     virtual void heat(float& temperature) = 0;
+    virtual void setHeaterSetting(int setting) = 0;
+    virtual int getHeaterSetting() = 0;
+    virtual int getNumberOfHeaterSettings() = 0;
 };
 
 

@@ -186,7 +186,7 @@ TEST_F(DaikinAssignmentTest, TestDifferetRadiatorValveSettings) {
 
     officeRoom->setCurrentTemperature(MIN_ROOM_TEMPERATURE);
     temperatureRegulator->setMinTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE);
-    radiator->setValveSetting(RadiatorValveSettings::SettingOne);
+    radiator->setHeaterSetting(static_cast<int>(RadiatorValveSettings::SettingOne));
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 24; i++) {
         officeRoom->applyThermalExchange();
         temperatureRegulator->regulateTemperature();
@@ -196,7 +196,7 @@ TEST_F(DaikinAssignmentTest, TestDifferetRadiatorValveSettings) {
 
     officeRoom->setCurrentTemperature(MIN_ROOM_TEMPERATURE);
     temperatureRegulator->setMinTemperature(MAX_VALID_ADJUSTABLE_TEMPERATURE);
-    radiator->setValveSetting(RadiatorValveSettings::SettingFive);
+    radiator->setHeaterSetting(static_cast<int>(RadiatorValveSettings::SettingFive));
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 24; i++) {
         officeRoom->applyThermalExchange();
         temperatureRegulator->regulateTemperature();
@@ -241,7 +241,7 @@ TEST_F(DaikinAssignmentTest, TestDifferentAirConditionerPowerSettings) {
 
     officeRoom->setCurrentTemperature(TEMPERATURE_HIGH);
     temperatureRegulator->setMaxTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE);
-    airConditioner->setPowerSetting(AirConditionerPowerSettings::Eco);
+    airConditioner->setCoolerSetting(static_cast<int>(AirConditionerPowerSettings::Eco));
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 10; i++) {
         officeRoom->applyThermalExchange();
         temperatureRegulator->regulateTemperature();
@@ -250,7 +250,7 @@ TEST_F(DaikinAssignmentTest, TestDifferentAirConditionerPowerSettings) {
 
     officeRoom->setCurrentTemperature(TEMPERATURE_HIGH);
     temperatureRegulator->setMaxTemperature(MIN_VALID_ADJUSTABLE_TEMPERATURE);
-    airConditioner->setPowerSetting(AirConditionerPowerSettings::High);
+    airConditioner->setCoolerSetting(static_cast<int>(AirConditionerPowerSettings::High));
     for (int i = 0; i < NUMBER_OF_REGULATIONS_PER_HOUR * 10; i++) {
         officeRoom->applyThermalExchange();
         temperatureRegulator->regulateTemperature();
@@ -376,7 +376,6 @@ TEST_F(DaikinAssignmentTest, TestAutoControlCooling) {
     for (int i = 0; i < 30 * NUMBER_OF_REGULATIONS_PER_HOUR; i++) {
         meetingRoom->applyThermalExchange();
         meetingRoomRegulator.regulateTemperature();
-        cout << meetingRoom->getCurrentTemperature() << endl;
     }
     EXPECT_LE(meetingRoom->getCurrentTemperature(), TEMPERATURE_MEDIUM);
 }

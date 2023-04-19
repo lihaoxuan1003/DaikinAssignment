@@ -19,8 +19,12 @@ public:
     void cool(float& temperature) override;
     void heat(float& temperature) override;
 
-    AirConditionerPowerSettings getPowerSetting() const;
-    void setPowerSetting(AirConditionerPowerSettings powerSetting);
+    void setCoolerSetting(int setting) override;
+    void setHeaterSetting(int setting) override;
+    int getCoolerSetting() override;
+    int getHeaterSetting() override;
+    int getNumberOfCoolerSettings() override;
+    int getNumberOfHeaterSettings() override;
 
 private:
     AirConditionerPowerSettings powerSetting;

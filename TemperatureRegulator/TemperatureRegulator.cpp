@@ -113,32 +113,13 @@ void TemperatureRegulator::setRoom(const shared_ptr<Room>& room) {
 
 void TemperatureRegulator::backupUserSettings() {
     for (const auto& heater: room->getHeaters()) {
-        if (auto radiator = dynamic_cast<Radiator*>(heater.get())) {
-            heatersSettingsBackup.push(static_cast<int>(radiator->getValveSetting()));
-            radiator->setValveSetting(RadiatorValveSettings::SettingZero);
-        } else if (auto airConditioner = dynamic_cast<AirConditioner*>(heater.get())) {
-            heatersSettingsBackup.push(static_cast<int>(airConditioner->getPowerSetting()));
-            airConditioner->setPowerSetting(AirConditionerPowerSettings::Off);
-        } else {
-            try {
-                throw exception();
-            } catch (const exception& e) {
-                cerr << "Exception: Unknown heater type." << '\n';
-            }
-        }
+        heatersSettingsBackup.push(heater->getHeaterSetting());
+        heater->setHeaterSetting(OFF);
     }
 
     for (const auto& cooler: room->getCoolers()) {
-        if (auto airConditioner = dynamic_cast<AirConditioner*>(cooler.get())) {
-            coolersSettingsBackup.push(static_cast<int>(airConditioner->getPowerSetting()));
-            airConditioner->setPowerSetting(AirConditionerPowerSettings::Off);
-        } else {
-            try {
-                throw exception();
-            } catch (const exception& e) {
-                cerr << "Exception: Unknown cooler type." << '\n';
-            }
-        }
+        coolersSettingsBackup.push(cooler->getCoolerSetting());
+        cooler->setCoolerSetting(OFF);
     }
 }
 
@@ -148,32 +129,13 @@ void TemperatureRegulator::restoreUserSettings() {
 
 
     for (const auto& heater: room->getHeaters()) {
-        if (auto radiator = dynamic_cast<Radiator*>(heater.get())) {
-            radiator->setValveSetting(static_cast<RadiatorValveSettings>(heatersSettingsBackup.front()));
-            heatersSettingsBackup.pop();
-        } else if (auto airConditioner = dynamic_cast<AirConditioner*>(heater.get())) {
-            airConditioner->setPowerSetting(static_cast<AirConditionerPowerSettings>(heatersSettingsBackup.front()));
-            heatersSettingsBackup.pop();
-        } else {
-            try {
-                throw exception();
-            } catch (const exception& e) {
-                cerr << "Exception: Unknown heater type.`" << '\n';
-            }
-        }
+        heater->setHeaterSetting(heatersSettingsBackup.front());
+        heatersSettingsBackup.pop();
     }
 
     for (const auto& cooler: room->getCoolers()) {
-        if (auto airConditioner = dynamic_cast<AirConditioner*>(cooler.get())) {
-            airConditioner->setPowerSetting(static_cast<AirConditionerPowerSettings>(coolersSettingsBackup.front()));
-            coolersSettingsBackup.pop();
-        } else {
-            try {
-                throw exception();
-            } catch (const exception& e) {
-                cerr << "Exception: Unknown cooler type." << '\n';
-            }
-        }
+        cooler->setCoolerSetting(coolersSettingsBackup.front());
+        coolersSettingsBackup.pop();
     }
 }
 
@@ -181,70 +143,36 @@ void TemperatureRegulator::autoAdjustHeaters() {
     // increase the heating power
     // use all the radiators before air-conditioners
     for (const auto& heater: room->getHeaters()) {
-        if (auto radiator = dynamic_cast<Radiator*>(heater.get())) {
-            if (radiator->getValveSetting() != RadiatorValveSettings::SettingFive) {
-                radiator->setValveSetting(RadiatorValveSettings::SettingFive);
-                return;
-            }
-        }
-    }
-
-    for (const auto& heater: room->getHeaters()) {
-        if (auto airConditioner = dynamic_cast<AirConditioner*>(heater.get())) {
-            if (airConditioner->getPowerSetting() != AirConditionerPowerSettings::High) {
-                airConditioner->setPowerSetting(
-                        static_cast<AirConditionerPowerSettings>(static_cast<int>(airConditioner->getPowerSetting()) +
-                                                                 1));
-                return;
-            }
+        auto currentSetting = heater->getHeaterSetting();
+        if (currentSetting < heater->getNumberOfHeaterSettings() - 1) {
+            heater->setHeaterSetting(currentSetting + 1);
+            return;
         }
     }
 }
 
 void TemperatureRegulator::autoAdjustCoolers() {
     for (const auto& cooler: room->getCoolers()) {
-        if (auto airConditioner = dynamic_cast<AirConditioner*>(cooler.get())) {
-            if (airConditioner->getPowerSetting() != AirConditionerPowerSettings::High) {
-                airConditioner->setPowerSetting(
-                        static_cast<AirConditionerPowerSettings>(static_cast<int>(airConditioner->getPowerSetting()) +
-                                                                 1));
-                return;
-            }
+        auto currentSetting = cooler->getCoolerSetting();
+        if (currentSetting < cooler->getNumberOfCoolerSettings() - 1) {
+            cooler->setCoolerSetting(currentSetting + 1);
+            return;
         }
     }
 }
 
 bool TemperatureRegulator::isHeatingPowerAtMaxLevel() {
     for (const auto& heater: room->getHeaters()) {
-        if (auto radiator = dynamic_cast<Radiator*>(heater.get())) {
-            if (radiator->getValveSetting() != RadiatorValveSettings::SettingFive)
-                return false;
-        } else if (auto airConditioner = dynamic_cast<AirConditioner*>(heater.get())) {
-            if (airConditioner->getPowerSetting() != AirConditionerPowerSettings::High)
-                return false;
-        } else {
-            try {
-                throw exception();
-            } catch (const exception& e) {
-                cerr << "Exception: Unknown heater type." << '\n';
-            }
-        }
+        if (heater->getHeaterSetting() < heater->getNumberOfHeaterSettings() - 1)
+            return false;
     }
     return true;
 }
 
 bool TemperatureRegulator::isCoolingPowerAtMaxLevel() {
     for (const auto& cooler: room->getCoolers()) {
-        if (auto airConditioner = dynamic_cast<AirConditioner*>(cooler.get())) {
-            if (airConditioner->getPowerSetting() != AirConditionerPowerSettings::High)
-                return false;
-        } else {
-            try {
-                throw exception();
-            } catch (const exception& e) {
-                cerr << "Exception: Unknown cooler type." << '\n';
-            }
-        }
+        if (cooler->getCoolerSetting() < cooler->getNumberOfCoolerSettings() - 1)
+            return false;
     }
     return true;
 }
@@ -323,30 +251,12 @@ void TemperatureRegulator::setRegulationMode(TemperatureRegulationModes regulati
 
 void TemperatureRegulator::turboAdjustHeaters() {
     for (const auto& heater: room->getHeaters()) {
-        if (auto radiator = dynamic_cast<Radiator*>(heater.get())) {
-            radiator->setValveSetting(RadiatorValveSettings::SettingFive);
-        } else if (auto airConditioner = dynamic_cast<AirConditioner*>(heater.get())) {
-            airConditioner->setPowerSetting(AirConditionerPowerSettings::High);
-        } else {
-            try {
-                throw exception();
-            } catch (const exception& e) {
-                cerr << "Exception: Unknown heater type." << '\n';
-            }
-        }
+        heater->setHeaterSetting(heater->getNumberOfHeaterSettings() - 1);
     }
 }
 
 void TemperatureRegulator::turboAdjustCoolers() {
     for (const auto& cooler: room->getCoolers()) {
-        if (auto airConditioner = dynamic_cast<AirConditioner*>(cooler.get())) {
-            airConditioner->setPowerSetting(AirConditionerPowerSettings::High);
-        } else {
-            try {
-                throw exception();
-            } catch (const exception& e) {
-                cerr << "Exception: Unknown cooler type." << '\n';
-            }
-        }
+        cooler->setCoolerSetting(cooler->getNumberOfCoolerSettings() - 1);
     }
 }

@@ -12,10 +12,15 @@ void Radiator::heat(float& temperature) {
 
 Radiator::Radiator(RadiatorValveSettings valveSetting) : valveSetting(valveSetting) {}
 
-RadiatorValveSettings Radiator::getValveSetting() const {
-    return valveSetting;
+
+void Radiator::setHeaterSetting(int setting) {
+    valveSetting = static_cast<RadiatorValveSettings>(setting);
 }
 
-void Radiator::setValveSetting(RadiatorValveSettings valveSetting) {
-    this->valveSetting = valveSetting;
+int Radiator::getNumberOfHeaterSettings() {
+    return static_cast<int>(RadiatorValveSettings::NumberOfSettings);
+}
+
+int Radiator::getHeaterSetting() {
+    return static_cast<int>(valveSetting);
 }

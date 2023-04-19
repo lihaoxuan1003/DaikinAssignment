@@ -19,8 +19,9 @@ public:
 
     void heat(float& temperature) override;
 
-    RadiatorValveSettings getValveSetting() const;
-    void setValveSetting(RadiatorValveSettings valveSetting);
+    int getHeaterSetting() override;
+    int getNumberOfHeaterSettings() override;
+    void setHeaterSetting(int setting) override;
 
 private:
     RadiatorValveSettings valveSetting;
