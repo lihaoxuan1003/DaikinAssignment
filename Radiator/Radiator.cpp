@@ -14,6 +14,8 @@ Radiator::Radiator(RadiatorValveSettings valveSetting) : valveSetting(valveSetti
 
 
 void Radiator::setHeaterSetting(int setting) {
+    if (setting < static_cast<int>(RadiatorValveSettings::SettingZero) || setting >= static_cast<int>(RadiatorValveSettings::NumberOfSettings))
+        throw invalid_argument("Invalid radiator valve setting.");
     valveSetting = static_cast<RadiatorValveSettings>(setting);
 }
 

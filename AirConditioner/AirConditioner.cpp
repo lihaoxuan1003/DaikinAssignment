@@ -15,6 +15,9 @@ void AirConditioner::cool(float& temperature) {
 }
 
 void AirConditioner::setCoolerSetting(int setting) {
+    if (setting < static_cast<int>(AirConditionerPowerSettings::Off) || setting >= static_cast<int>(AirConditionerPowerSettings::NumberOfSettings))
+        throw invalid_argument("Invalid air conditioner setting.");
+
     powerSetting = static_cast<AirConditionerPowerSettings>(setting);
 }
 
@@ -27,6 +30,9 @@ int AirConditioner::getNumberOfCoolerSettings() {
 }
 
 void AirConditioner::setHeaterSetting(int setting) {
+    if (setting < static_cast<int>(AirConditionerPowerSettings::Off) || setting >= static_cast<int>(AirConditionerPowerSettings::NumberOfSettings))
+        throw invalid_argument("Invalid air conditioner power setting.");
+
     powerSetting = static_cast<AirConditionerPowerSettings>(setting);
 }
 
